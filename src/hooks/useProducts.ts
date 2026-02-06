@@ -1,9 +1,18 @@
 // Hook for fetching products from Spring Boot API with fallback to static data
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { productsApi, categoriesApi, type Product as ApiProduct, type Category as ApiCategory } from '@/lib/api';
-import { products as staticProducts, categories as staticCategories, getProductsByCategory, getProductById, getCategoryById, type Product, type Category } from '@/lib/data';
+import { productsApi, categoriesApi } from '@/lib/api';
+import { 
+  products as staticProducts, 
+  categories as staticCategories, 
+  getProductsByCategory, 
+  getProductById, 
+  getCategoryById, 
+  searchProducts,
+  type Product, 
+  type Category 
+} from '@/lib/data';
 
 // Check if API is configured
 const API_ENABLED = !!import.meta.env.VITE_API_URL;
@@ -140,12 +149,7 @@ export function useProductSearch(query: string) {
     }
     // Fallback: local search
     if (query.length >= 2) {
-      const lowerQuery = query.toLowerCase();
-      return staticProducts.filter(
-        p => p.name.toLowerCase().includes(lowerQuery) ||
-             p.description.toLowerCase().includes(lowerQuery) ||
-             p.category.toLowerCase().includes(lowerQuery)
-      );
+      return searchProducts(query);
     }
     return [];
   }, [useApi, apiQuery.data, query]);
