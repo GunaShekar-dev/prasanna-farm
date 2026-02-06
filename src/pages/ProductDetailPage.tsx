@@ -13,21 +13,38 @@ import {
   RefreshCcw,
   Leaf,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { ProductCard } from "@/components/products/ProductCard";
-import { getProductById, products } from "@/lib/data";
+import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = getProductById(id || "");
+  const { product, isLoading } = useProduct(id || "");
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+
+  // Get related products from same category
+  const { products: relatedProducts } = useProducts(product?.category);
+  const filteredRelated = relatedProducts
+    .filter((p) => p.id !== product?.id)
+    .slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!product) {
     return (
@@ -55,10 +72,6 @@ export default function ProductDetailPage() {
       setTimeout(() => setIsAdded(false), 2000);
     }, 500);
   };
-
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
 
   const features = [
     { icon: Truck, title: "Free Delivery", desc: "On orders above ₹500" },
@@ -258,13 +271,13 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Related Products */}
-          {relatedProducts.length > 0 && (
+          {filteredRelated.length > 0 && (
             <div>
               <h2 className="heading-section text-foreground mb-8">
                 Related Products
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {relatedProducts.map((p) => (
+                {filteredRelated.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
               </div>
