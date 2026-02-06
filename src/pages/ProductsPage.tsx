@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, Grid3X3, LayoutList, SlidersHorizontal } from "lucide-react";
+import { Filter, Grid3X3, LayoutList, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { ProductCard } from "@/components/products/ProductCard";
-import { products, categories, getProductsByCategory } from "@/lib/data";
+import { useProducts, useCategories } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
@@ -14,26 +14,32 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("featured");
   const sectionRef = useScrollReveal<HTMLElement>();
+  
+  // Fetch from API with fallback to static data
+  const { products, isLoading: productsLoading } = useProducts(activeCategory);
+  const { categories, isLoading: categoriesLoading } = useCategories();
 
   const filteredProducts = useMemo(() => {
-    let filtered = getProductsByCategory(activeCategory);
+    let filtered = [...products];
 
     switch (sortBy) {
       case "price-low":
-        filtered = [...filtered].sort((a, b) => a.price - b.price);
+        filtered = filtered.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        filtered = [...filtered].sort((a, b) => b.price - a.price);
+        filtered = filtered.sort((a, b) => b.price - a.price);
         break;
       case "rating":
-        filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+        filtered = filtered.sort((a, b) => b.rating - a.rating);
         break;
       default:
         break;
     }
 
     return filtered;
-  }, [activeCategory, sortBy]);
+  }, [products, sortBy]);
+
+  const isLoading = productsLoading || categoriesLoading;
 
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -142,22 +148,31 @@ export default function ProductsPage() {
             Showing <span className="font-semibold text-foreground">{filteredProducts.length}</span> products
           </p>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+          )}
+
           {/* Products Grid */}
-          <div
-            className={cn(
-              "stagger-children",
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            )}
-          >
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {!isLoading && (
+            <div
+              className={cn(
+                "stagger-children",
+                viewMode === "grid"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  : "space-y-4"
+              )}
+            >
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {filteredProducts.length === 0 && (
+          {!isLoading && filteredProducts.length === 0 && (
             <div className="text-center py-20 reveal">
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
                 <Filter className="w-10 h-10 text-muted-foreground" />
