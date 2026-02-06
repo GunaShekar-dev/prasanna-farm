@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { products } from "@/lib/data";
+import { getFeaturedProducts } from "@/lib/data";
 import { ProductCard } from "@/components/products/ProductCard";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export function FeaturedProducts() {
   const sectionRef = useScrollReveal<HTMLElement>();
-  const featuredProducts = products.slice(0, 4);
+  const featuredProducts = getFeaturedProducts(8);
 
   return (
     <section ref={sectionRef} className="section-padding">
@@ -30,8 +30,8 @@ export function FeaturedProducts() {
           </Link>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+        {/* Products Grid - Show 8 products */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 stagger-children">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
